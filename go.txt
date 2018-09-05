@@ -1,0 +1,234 @@
+﻿1. 数据类型
+	布尔类型：bool -- true/false
+	整数类型：
+		[u]int[8/16/32/64]
+		float[32/64]
+		complex[64/128](复数) 
+		byte(类似uint8)
+		rune(类似int，存Unicode)
+		uintptr(无符号整数，用于存放一个指针)
+		(u表示无符号)
+	字符串：string
+	字符串有个操作类库：strconv，里面有将字符串和其他基本类型相互转换，如strconv.Itoa(int)将int转换为数字字符串，strconv.Atoi(string)将数字字符串转换为int类型
+
+	注：整数不能直接强转为浮点
+		直接使用println()输出的时科学记数法，而使用fmt.Println()输出小数
+		浮点数的精确度问题（使用整数除法转为浮点数）
+	
+2. 几种变量声明方式
+	var name type
+	var name type = value
+	var name = value
+	name := value
+	注：直接用:=的方式声明只能在方法中
+	
+3. 常量声明
+	* const声明
+	* iota 初始为0,每出现一个常量加一，知道重新出现const初始化为0，用于<<或>>有奇效
+	
+4. 运算符，跟Java差不多
+	特别注意：位运算只有<<和>>
+		  &返回变量存储地址，*获取指针指向的值，跟C差不多
+		  只有i++，没有++i，并且i++不能用于条件判断，即++或--操作不是表达式
+		  
+5. 条件语句
+	if语句跟Java差不多，只是判断条件可以不加括号，且左大括号不能单独一行
+	switch支持多条件匹配，不需要加break，case中可以包含多个
+	（默认只执行一个case，想要继续向下执行则使用fallthrough）
+	可以判断类型switch x.(type) {...}， x.(type)用于获取x的类型，x为interface{}类型，x.(type)只能在switch中
+	条件表达式前面可以定义一个变量并初始化即用:=，用;隔开
+	
+6. 循环语句（{不能单独一行）
+	for循环1(相当于Java里的for循环)：
+		for init; condition; post{ xxx }
+		for {}相当于Java里的 for(;;) {}
+	for循环2(相当于Java里的while循环)
+		for condition {}
+	for循环3(相当于Java里的foreach),使用range关键字
+		for key, value := range oldMap {}
+		for i,x := range numbers {} (遍历数组i为索引)
+	break和continue和Java一样，也可以设置标签Label:xxx	break:Label
+	goto
+		格式；
+			goto label
+			..
+			.
+			label: statement
+			
+	注：for后面一溜不能使用括号
+		
+			
+7. go语言函数
+	语法：func function_name( [parameters type] ) [return_types] {...}
+	如：func max(num1, num2 int) int { 
+			return 1
+		}
+	注：可以返回多个值，需要打括号，如果返回值指定了名称，那么只要返回return就行，在函数中给返回值赋值
+	如：func swap(x, y, string) (string, string) {
+			return y,x
+		}
+		
+8. 值传递和引用传递
+	值传递：一般用于基本数据类型，在传递值的时候复制一遍到函数中，保存在栈中
+	引用传递：在传递的时候将实际参数的地址传递到函数中，改变将影响实际参数（指针，实参&，形参*）
+	go语言中只有指针和slice(切片)传递的是地址即引用传递，其他都是传递的值
+
+9. 函数的使用：
+	函数作为值使用，即可以声明函数变量，如：
+		getSquareRoot := func(x float64) float64 {
+			return math.Sqrt(x)
+		}
+		//使用
+		fmt.Println(getSquareRoot(90))
+
+	闭包（匿名函数，在函数中定义函数），如下一个返回函数的函数：
+		func getSquare() func() int {
+			i:=0
+			return func() int {
+				i += 1
+				return i
+			}
+		}
+		
+		//使用
+		nextNumber := getSquare()
+		nextNumber(); // 调用nextNumber函数，即闭包函数，i自增，并返回
+		
+	方法，即包含了接收者的函数，即属于某个命名类型或者结构体类型的函数，如：
+		type Circle struct {
+			radius float64
+		}
+		
+		func (c Circle) getArea() float64 {
+			return 3.14 * c.radius * c.radius
+		}
+	
+	函数返回值：如果函数在声明的时候声明了返回值的名称，那么在返回时return
+	后面不需要追加任何东西。
+		
+10. go语言变量作用域
+	go语言中的变量在三个地方声明：
+		函数内定义为局部变量
+		函数外定义为全局变量
+		函数定义中的变量为形式参数
+		相同时讲究就近原则
+	局部和全局变量默认值：
+		int 		0
+		float32		0
+		pointer		nil
+		string		""(空串)
+		
+11. 数组
+	声明数组格式：var variable_name [SIZE]variable_type (SIZE > 0且为整数)
+		如：var nums [10]int
+	初始化数组：var balance = [10]float64{10.0, 12.0}
+				如果大小设置为[...]，则默认为元素个数
+	多维数组：将[SIZE]改为[SIZE1][SIZE2]...，用多重在{}里面再{}初始化
+	向函数中传递数组：func func_name(para_name []type) type {}，传递的是整个数组的一份复制！！！
+	
+	注：数组中[]只能放左边
+
+12. 指针
+	声明指针：var name *type，值为type类型值的地址，使用&获取地址，使用*获取值
+	指向指针的指针：**ptr值为指向的指针的地址，和C差不多
+	指针作为参数：和C差不多，指针传递都是引用传递，即传递的是地址
+
+13. go语言结构体，和C语言结构体类似
+	* 定义结构体：
+	type struct_variable_type struct {
+		member1 type1
+		member2 type2
+		...
+	}
+	
+	* 一旦定义了结构体，就可以用于变量的声明，如：
+		variable_name = struct_variable_type {[key1:]value1, [key2:]value2, ...}
+	
+	* 访问结构体成员，通过.
+	* 结构体作为函数参数（跟普通的差不多）
+	* 结构体指针，可以通过.访问成员
+	* 结构体中可以嵌套结构体(相当于继承吧)，如果没有指定名称，默认为结构体名称，不冲突的情况下可以直接使用内嵌
+	  结构体中的值。冲突的情况下需要加前缀。
+	* 结构体中的匿名字段
+	* 结构体中嵌套字段赋值
+	
+
+14. 切片
+	初始化切片：
+		var num = make([]int, len[, cap])等同于num := make([]int, len)，cap表示当前指针到指向底层数组最后一个元素之间的长度
+		nums := []int{1,2,3,4,5}
+	len()和cap()函数：
+		len()方法获取长度
+		cap()测量切片最长可达到多少
+	空切片(nil)：
+		一个切片在未初始化之前默认为nil，长度为0
+	切片截取：
+		name[start:end]
+	append()和copy()函数：
+		append(slice_name, value...)//向切片中添加元素
+		copy(slice_dest, slice_src)//复制
+
+15. range关键字用于for循环中迭代数组(array),切片(slice),通道(channel)或集合(map)的元素
+
+16. Map集合
+	定义Map：
+		var map1 map[string]string		//声明map变量，为nil，不能添加值
+		var map1 = map[string]string{}	//声明map变量，不为nil
+		map1 := make(map[string]string)	//声明并初始化，不为nil
+	添加元素：
+		map1["France"] = "Paris"
+		map1["Italy"] = "罗马"
+		map1["Japan"] = "东京"
+	判断某元素是否存在：
+		capital, ok = countryCapitalMap["美国"]
+	delete()函数：
+		delete(map1, "France")
+
+17. go语言类型转换：只能是相同类别的转换
+	type_name(expression)如int(1.2)
+	
+18. go语言接口
+	go语言中的接口就是先定义一个接口，然后定义结构体，定义结构体方法实现接口
+	接口中可以嵌入其他接口
+	
+19. 错误处理
+	go语言通过内置的错误接口提供非常简单的错误处理机制
+	error类型是一个接口类型，有如下定义：
+		type error interface {
+			Error() string
+		}
+	可以实现error接口来生成错误信息
+	函数通常在最后的返回值中返回错误信息。使用errors.New("xxx")可以返回一个错误信息
+
+	Go编程习惯于把error类型的结果作为函数结果列表的最后一员
+	
+	主要是通过panic和recover两个函数来产生运行时恐慌和处理
+		
+20. 切片与数组的区别：
+	* 数组需要初始化的时候指定大小，切片不需要
+	* 切片大小可变，数组大小不可变
+	* 数组作为形参的时候，是值传递，切片作为形参的时候是地址传递	
+	* 切面的类型字面量并不携带长度信息。切片长度可变且不是类型的一部分，
+	  只要元素类型相同，两个切片的类型就是相同的。而数组携带长度和指向
+	  底层数组的指针。
+	* 切面内部结构包含3个元素，指向底层数组中某元素的指针、切片的长度以及
+	  切片的容量。这里容量是值指针到底层数组最后一个元素的元素个数。
+
+21. defer语句，该语句用于延迟调用指定的函数，只能出现在函数内部。如：
+	func outerFunc() {
+	    defer fmt.Println("函数执行结束前一刻才会被调用")
+	    fmt.Println("第一个被打印")
+	}
+
+    这里的outerFunc称为外围函数，调用outerFunc的函数称为调用函数
+    具体规则：
+	* 当外围函数中的语句正常执行完毕时，只有其中所有的延迟函数都执行完毕，
+	  外围函数才真正结束执行
+	* 当执行外围函数中的return语句时，只有其中所有的延迟函数都执行完毕后，
+	  外围函数才会真正返回
+	* 当外围函数中的代码引发运行时恐慌时，只有其中所有的延迟函数都执行完毕
+	  后，该运行时恐慌才会真正被扩散值
+
+22. panic和recover
+    panic相当于Java里的抛出一个运行时恐慌，可以接收一个参数，通常为string或error
+    recover相当于Java里的捕捉恐慌，通常与defer一起用
