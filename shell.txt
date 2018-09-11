@@ -1,0 +1,184 @@
+1.Shell环境，Shell种类有多种，一般默认为Bash
+2.运行Shell脚本有两种方法：
+	(1).作为可执行程序：保存脚本为.sh后缀的文件，使用chmod xxx file赋予文件权限，再使用./xxx.sh执行
+	(2).作为解释器参数：/bin/sh test.sh (这种方式不需要在第一行指定解释器信息)
+3.Shell变量
+	变量的定义：
+		(1).var_name=value，变量名只能使用英文字母，数字和下划线，首字母不能以数字开头
+		(2).变量名中间不能有空格
+		(3).不能使用标点符号
+		(4).不能使用关键字
+	变量的使用：
+		使用$var_name的方式使用
+	只读变量：
+		readonly var_name
+	删除变量：
+		unset var_name，不能删除只读变量
+	变量类型：
+		局部变量，环境变量，shell变量
+	Shell字符串：
+		(1).单引号：和php的单引号使用差不多，单引号中不能出现单独的单引号，转义的也不行，可以成对使用作为字符串拼接
+		如str='Hello '$name'!'
+		(2).双引号也和php差不多，中间可以包含变量的的使用，可以包含转义字符
+		(3).获取字符串长度
+			${#var_name}
+		(4).提取子字符串
+			${var_name:start:end} // 索引从0开始，区间为[start,end]
+		(5).查找字符串
+			如查找字符i/o的位置(哪个字母先出现就计算哪个)：
+			str="hello world is good"
+			echo `expr index "$str" io"
+	Shell数组：
+		(1).定义数组，用括号表示数组，用空格分隔
+			var_name=(value1 value2 value3)
+			或者
+			var_name=(
+			value1
+			value2
+			value3
+			)
+			单独定义：var_name[0]=value0
+		(2).读取数组
+			${var_name[index]}
+			使用@获取数组中所有的元素，如${array_name[@]}
+		(3).获取数组长度
+			length=${#array_name[@]}
+			或者
+			length=${#array_name[*]}
+			获取数组中单个元素的长度：
+			lengthn=${#array_name[n]}
+	Shell注释：
+		以#开头就是注释
+		多行注释：
+			:<<EOF
+			注释内容
+			注释内容
+			注释内容
+			EOF
+			（EOF也可以使用其他符号）
+
+4.执行shell脚本时向脚本传递参数，在shell中使用$n (n为数字，如1，2...)获取第n个参数，0为执行文件名
+	几个特殊字符用来处理参数：
+		$#		参数个数
+		$*		以一个但字符串显示所有向脚本传递的参数
+		$$		脚本运行的当前进程ID
+		$!		后台运行的最后一个进程ID
+		$@		与$*相同，返回格式是用""包含的形式
+		$-		与set命令功能相同
+		$?		显示最后命令的退出状态。0为没有错误，其他值表示有错误。
+		
+5.Shell数组
+	shell数组只支持一维数组，初始化时不需要定义数组大小，数组中可以放多种类型
+	在定义变量时已经介绍过了。
+
+6.Shell运算符
+	原生bash不支持简单的数学运算，但是可以通过其他命令来实现，例如awk和expr，expr最常用。
+	expr时一款表达式计算工具，使用它可以完成表达式的求值操作。
+	如：
+	val=`expr 2 + 2`
+	echo "两数之和为：$val"
+	注：(1).表达式和运算符之间要有空格 (2).完整的表达式要被``包含
+	
+	算术运算符；+ - * / % = == !=
+	注：条件表达式要放在方括号之间，并且有空格，如[ $a == $b ]
+	关系运算符：-eq(相等) -ne(不能) -gt(大于) -lt(小于) -ge(大于等于) -le(小于等于)
+	布尔运算符：!(非) -o(或) -a(与)
+	逻辑运算符：&& 和 ||
+	字符串运算符：= != -z(判断长度为0，为0返true) -n(判断长度为0，不为0返true) str(判断字符为空，不为空返true)
+	文件测试运算符：略
+	
+7.echo命令，用于字符串的输出
+	(1).显示普通字符串
+	(2).显示转义字符
+	(3).显示变量
+	(4).显示换行，echo -e "OK! \n"  # -e开启转义
+	(5).显示不换行，echo -e "\c" #-e开启转义，\c不换行
+	(6).显示结果定向至文件，使用echo "Hello world" > myfile
+	(7).用单引号原样输出字符串
+	(8).显示命令执行结果，echo `date`
+
+8.Shell printf命令
+	格式：printf format-string [arguments...]，模仿C语言里的printf()
+	如：printf "%-10s %-8s %-4s\n" 姓名 性别 体重KG
+
+9.Shell test命令：用于检查某个条件是否成立，可以进行数值、字符和文件三方面测试
+	数值测试参数：-eq -ne -gt -ge -lt -le
+	字符串测试参数：和上述表达式一样
+	文件测试参数：同上
+	shell还提供了与（-a）、或（-o）、非（！）用于连接测试条件
+	
+10.Shell流程控制
+	if else:
+		写法：
+		if condition
+		then
+			command1
+			command2
+			command3
+			...
+		[elif condition2]
+			[...]
+		[else]
+			[...]
+		fi
+		写成一行：if [ xxx xx xxx]; then xxxx; fi
+	for循环：
+		for var in item1 item2 ... itemN
+		do
+			xxx
+			...
+			xxx
+		done
+		写成一行：for var in xxx xxx xxx; do xxx; xxx; ...; done;
+	while循环：
+		while xxx
+		do
+			xxxx
+		done
+		
+		无限循环：
+		while :
+		do
+			xxx
+		done
+		或
+		while true
+		do 
+			xxx
+		done
+		或
+		for (( ; ; ))
+	until循环：
+		until xxx # 如果xxx返回false，继续，否则退出
+		do
+			xxx
+		done
+	case：
+		case 值 in
+			value0) xxxx
+			;;
+			value1) xxxx
+			;;
+			value1) xxxx
+			;;
+			*) xxxx
+			;;
+		esac
+		case语法需要一个esac（就是case反过来）作为结束标记，每个case分支用右圆括号，用两个分号表示break
+	break：
+	continue：
+	for (( ; ; ));do #(())中定义变量不需要加$
+		xxxx
+	done;
+
+11.Shell函数
+	定义格式：
+		[ function ] funname [()] {
+			action;
+			[return int;]
+		}
+	函数返回值在调用后用$?来获得
+	注：所有函数在使用前必须定义。这意味着必须将函数放在脚本开始部分，直至shell解释器首次发现它时，才可使用。
+	调用函数仅使用其函数名即可。
+	函数参数：
+		通过$n的方式获取参数，当n>=10时要使用${n}获取参数
