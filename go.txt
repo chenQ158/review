@@ -232,3 +232,9 @@
 22. panic和recover
     panic相当于Java里的抛出一个运行时恐慌，可以接收一个参数，通常为string或error
     recover相当于Java里的捕捉恐慌，通常与defer一起用
+	
+23.strconv库可以进行string，int64，int之间的转化，特别时其中的Atoi(string)和Itoa(int)以及ParseInt，FormatInt
+
+24.strings库可以对字符串进行一些相关的操作，特别时其中的Replace，Contains等等常用函数
+
+25.常用的操作：可以将interface{}类型转换为其他类型，语法：res,ok := val_name.(type)，ok表示是否转换成功，res为转换后结果
