@@ -1,0 +1,3 @@
+将bind 127.0.0.1注释掉，这句表示只监听127.0.0.1
+将requirepass password的注释去掉，即设置密码
+将protected-mode 设置为 no

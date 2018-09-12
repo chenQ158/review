@@ -1,0 +1,9 @@
+使用route -n查看网关和子网掩码
+使用cat /etc/resolv.conf查看dns
+然后在ifcfg-ensxxx文件中修改：
+BOOTPROTO=static
+ONBOOT=yes
+DNSI=查询到dns
+IPADDR=IP地址
+NETMASK=子网掩码
+GATEWAY=网关

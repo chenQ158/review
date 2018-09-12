@@ -1,0 +1,11 @@
+虚拟机在移植到新的VM上时，mysql数据库会出现access denied for user ''@'localhost' to database 'database_name'错误，并且只有information_schema和test两个数据库。
+解决办法：
+关闭mysql：systemctl stop mariadb
+然后，mysqld_safe --skip-grant-tables 就跳过权限开启了数据库
+再使用客户端连接mysql -uroot
+更改mysql密码：UPDATE user SET Password=PASSWORD('xxx') WHERE user='root';
+
+使用mysqld_safe --skip-grant-tables开启数据库
+
+grant all privileges on *.* to 'root'@'192.168.92.%' identified by '' with grant option;
+flush privileges;
