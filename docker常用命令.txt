@@ -1,0 +1,24 @@
+docker images 查看镜像
+docker container ls -all 查看所有容器
+systemctl start docker 开启docker
+docker run -i -t 容器名
+docker start 容器名/ID 开启容器
+docker container rm 容器ID 删除容器
+docker container start 容器名/ID
+docker container stop 容器名/ID
+docker container exec
+
+docker container run命令会从 image 文件生成容器。
+
+$ docker container run-p8000:3000-it koa-demo/bin/bash# 或者$ docker container run-p8000:3000-it koa-demo:0.0.1/bin/bash
+
+上面命令的各个参数含义如下：
+
+-p参数：容器的 3000 端口映射到本机的 8000 端口。
+
+-it参数：容器的 Shell 映射到当前的 Shell，然后你在本机窗口输入的命令，就会传入容器。
+
+koa-demo:0.0.1：image 文件的名字（如果有标签，还需要提供标签，默认是 latest 标签）。
+
+/bin/bash：容器启动以后，内部第一个执行的命令。这里是启动 Bash，保证用户可以使用 Shell。
+

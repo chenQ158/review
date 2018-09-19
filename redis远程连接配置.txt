@@ -1,3 +1,12 @@
 将bind 127.0.0.1注释掉，这句表示只监听127.0.0.1
 将requirepass password的注释去掉，即设置密码
 将protected-mode 设置为 no
+
+远程启动命令：
+redis-cli [-c] -h host -p port (-c表示启动集群模式)
+如果没有-c会报MOVED xxxx xx xxx错误
+
+redis集群配置文件修改：
+PORT为端口，从该端口+n为每个节点
+NODES为节点数
+还需要修改一个HOSTS为192.168.91.128

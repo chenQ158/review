@@ -7,3 +7,14 @@ DNSI=查询到dns
 IPADDR=IP地址
 NETMASK=子网掩码
 GATEWAY=网关
+
+从复制来的centos虚拟机配置桥接IP需要更改mac地址和uuid
+mac地址通过虚拟机网络适配器里面的高级可以生成mac
+uuid通过uuidgem ens33（网卡名）生成
+然后在ifcfg-ensxxx 中配置
+BOOTPROTO=static
+ONBOOT=yes
+DNSI=本机的dns
+IPADDR=本机ip
+NETMASK=本机子网掩码
+GATEWAY=本机网关
