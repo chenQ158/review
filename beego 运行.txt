@@ -1,0 +1,3 @@
+bee run -gendoc=true -downdoc=true
+
+go vendor解决包依赖问题

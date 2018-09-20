@@ -1,0 +1,6 @@
+1. 出现flag redefined: graceful问题：
+   原因：vendor中不存在本项目
+   解决：进入vendor目录，govendor add +e
+   
+2. vendor目录下的struct无法转化为xxx的
+   原因：项目中引用了别的项目中的包

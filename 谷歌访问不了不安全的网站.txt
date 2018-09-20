@@ -1,0 +1,5 @@
+打开chrome://net-internals/#hsts:
+选择Domain Security Policy
+搜索delete domain security policies
+Delete被禁的域名
+OK
