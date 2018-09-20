@@ -22,3 +22,69 @@ koa-demo:0.0.1：image 文件的名字（如果有标签，还需要提供标签，默认是 latest 标签
 
 /bin/bash：容器启动以后，内部第一个执行的命令。这里是启动 Bash，保证用户可以使用 Shell。
 
+
+安装dockers
+
+卸载老docker
+yum remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-selinux \
+                  docker-engine-selinux \
+                  docker-engine
+
+yum install -y yum-utils \
+        device-mapper-persistent-data \
+        lvm2
+
+        sudo yum-config-manager \
+        --add-repo \
+        https://download.docker.com/linux/centos/docker-ce.repo
+
+        sudo yum install -y docker-ce
+
+        sudo systemctl start docker
+
+        sudo systemctl enable docker
+		
+
+- 修改镜像源为国内Docker官方镜像(这里可选的还有阿里/DaoCloud等)
+
+        `vi /etc/docker/daemon.json`
+
+        内容变为以下:
+
+        ```
+        {
+          "registry-mirrors": ["https://registry.docker-cn.com"]
+        }
+        ```
+
+        重启
+
+        `systemctl daemon-reload`
+
+        `systemctl restart docker`
+
+    - 数据库(MYSQL_ROOT_PASSWORD字段值自定义)
+
+        ```
+        mkdir /var/lib/mariadb
+
+        docker pull mariadb:10.2.10
+
+        docker run --name mariadb --restart=always -v /var/lib/mariadb:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=XXXX -p 3306:3306 -d mariadb:10.2.10
+        ```
+	- etcd
+
+        ```
+        docker pull registry.ffpms.com/library/etcd
+
+        docker tag registry.ffpms.com/library/etcd:latest etcd:latest
+
+        docker run -d -p 4001:4001 --name etcd etcd:latest -name etcd0
+        ```
