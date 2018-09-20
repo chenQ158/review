@@ -1,0 +1,313 @@
+1 用户
+    1.1 Tb_User - - - 登录账户
+            Id
+            Email - - - 登录邮箱，唯一
+            Username - - - 登录用户名，唯一
+            Password - - - 登录密码
+            Salt - - - 加密盐
+            Status - - - 用户状态
+            IsActive - - - 是否激活
+            ActiveCode - - - 激活码
+            Created - - - 创建时间
+            Updated - - - 更新时间
+
+    sql:
+        // 1.1.1 注册
+        insert into Tb_User(Email, Username, Password, Salt, Status, IsActive, ActiveCode, Created, Updated) values(?,?,?,?,?,?,?,?,?)
+        // 1.1.2 通过邮件登录
+        select Id,Email,Username,Password,Salt,Status,IsActive,ActiveCode,Created,Updated from Tb_User where Email=? and Status=0
+        // 1.1.3 通过用户名登录
+        select Id,Email,Username,Password,Salt,Status,IsActive,ActiveCode,Created,Updated from Tb_User where Username=? and Status=0
+        // 1.1.4 修改密码
+        update Tb_User set Password = ?,Updated=? where Id=? and Status=0
+        // 1.1.5 修改绑定邮箱
+        update Tb_User set Email=?,Updated=? where Id=? and Status=0
+        // 1.1.6 激活
+        update Tb_User set IsActive=1,ActiveCode='',Updated=? where Id=? and status=0
+        // 1.1.7 删除
+        update Tb_User set Status=1,Updated=? where Id=?
+
+    1.2. Tb_User_Info - - - 用户详情信息
+            Id
+            Nickname - - - 昵称，唯一
+            Age - - - 年龄
+            Gender - - - 性别
+            Name - - - 姓名
+            Birthday - - - 出生日期
+            Updated - - - 更新时间
+
+    sql:
+        // 1.2.1 添加 需要添加Id和Tb_User的Id一样
+        insert into Tb_User_Info(Id, NickName, Age, Gender, Name, Birthday, Updated) values(?,?,?,?,?,?,?)
+        // 1.2.2 修改,只修改昵称和性别,出生日期
+        update Tb_User_Info set NickName=?,Gender=?,Birthday=?,Updated=? where Id=?
+        // 1.2.3 查,用于登录后保存在session中
+        select Id,NickName,Age,Gender,Name,Birthday,Updated from Tb_User_Info where Id=?
+
+    1.3. Tb_User_Other - - - 用户统计信息
+            Id
+            BeFollowCount - - - 被关注数，默认0，权重比值10
+            FollowCount - - - 关注数，默认0
+            BeLikeCount - - - 被赞数，默认0，权重壁纸1
+            LikeCount - - - 点赞数，默认0
+            NoteCount - - - 帖子数，默认0，权重壁纸3
+            ResourceCount - - - 资源数，默认0，权重比值1
+            BeCollectedCount - - - 被收藏数，默认0，权重比值5
+            CollectCount - - - 收藏数，默认0
+            OrderValue - - - 权重，默认0
+            Updated - - - 更新时间
+
+    sql:
+        // 1.3.1 添加
+        insert into Tb_User_Other(Id, Updated) value(?,?)
+        // 1.3.2 更新被关注数 ? 可以是正数，可以是负数
+        update Tb_User_Other set BeFollowCount=BeFollowCount+?,Updated=now() where Id=?
+        或者
+        查出Tb_Follow_User表中BeFollowedUserId为Id的数量，然后更新，下面的也一样
+        // 1.3.3 更新关注数
+        update Tb_User_Other set FollowCount=FollowCount+?,Updated=now() where Id=?
+        // 1.3.4 更新被赞数
+        update Tb_User_Other set BeLikeCount=BeLikeCount+?,Updated=now() where Id=?
+        // 1.3.5 更新点赞数
+        update Tb_User_Other set LikeCount=LikeCount+?,Updated=now() where Id=?
+        // 1.3.6 更新帖子数
+        update Tb_User_Other set NoteCount=NoteCount+?,Updated=now() where Id=?
+        // 1.3.7 更新资源数
+        update Tb_User_Other set ResourceCount=ResourceCount+?,Updated=now() where Id=?
+        // 1.3.8 更新被收藏数
+        update Tb_User_Other set BeCollectedCount=BeCollectedCount+?,Updated=now() where Id=?
+        // 1.3.9 更新收藏数
+        update Tb_User_Other set CollectCount=CollectCount+?,Updated=now() where Id=?
+
+        // 1.3.10 更新所有权重
+        update Tb_User_Other set OrderValue = BeFollowCount*10 + BeLikeCount*1 + NoteCount*3 + ResourceCount*1 + BeCollectedCount*5
+
+        // 1.3.11 一次性查
+        select Id,BeFollowCount,FollowCount,BeLikeCount,LikeCount,NoteCount,ResourceCount,BeCollectedCount,CollectCount,Updated from Tb_User_Other where Id=?
+        // 1.3.12 根据权重查询
+        select info.* from Tb_User_Info info join Tb_User user on user.Id=info.Id join Tb_User_Other other on info.Id=other.Id order by other.OrderValue limit 50
+
+2.帖子
+    2.1 Tb_Note
+            Id
+            ResourceCount - - - 资源数
+            Content - - - 附带文本内容
+            ReplayCount - - - 评论数，默认0
+            UserId - - - 创建用户Id
+            LikeCount - - - 点赞数，默认0
+            CollectCount - - - 收藏数，默认0
+            Views - - - 浏览数，默认0
+            OrderValue - - - 帖子权重
+            Status - - - 状态：0.正常 1.删除，默认0
+            Created - - - 创建时间
+            Updated - - - 更新时间
+
+    sql:
+        // 2.1.1添加
+        // (1).先添加资源 Tb_Resource表
+        // (2).获取添加的资源数
+        // (3).添加帖子
+        insert into Tb_Note(ResourceCount, Content, UserId, Created, Updated) values(?,?,?,?,?)
+        // (4).更新用户帖子数 Tb_User_Other 1.3.6
+        // (5).更新用户资源数 Tb_User_Other 1.3.7
+
+        // 2.1.2删除帖子
+        // (1).设置帖子状态为1
+        update Tb_Note set Status=1 where Id=?
+        // (2).生产消息，更新统计数据
+        // (3).消费消息，更新用户统计信息Tb_User_Other 1.3.6
+
+        // 2.1.3获取帖子内容
+        // (1).获取帖子信息
+        select Id,ResourceCount,Content,ReplayCount,UserId,LikeCount,CollectCount,Views,Created,Updated where Id=? and Status=0
+        // (2).获取帖子所属用户 Tb_User_Info 1.2.3
+        // (3).获取帖子评论信息 Tb_Note_Comment 2.2.3
+        // (4).获取评论用户信息 Tb_User_Info 1.2.3
+
+        // 2.1.4更新帖子统计数据
+        update set ReplayCount=?,LikeCount=?,CollectCount=?,Views=?,Updated=? where Id=? and Status=0
+
+        // 2.1.5更新帖子权重值
+
+        // 2.1.6根据帖子权重值排序获取前xxx个帖子
+
+    2.2. Tb_Note_Comment
+            Id
+            EntityType - - - 被评论的实体
+            EntityId - - - 被评论的实体Id
+            Content - - - 评论内容
+            UserId - - - 评论人Id
+            Created - - - 评论时间
+            Status - - - 状态：0.正常 1.删除，默认0
+            ParentId - - - 父评论，默认0
+    sql:
+        // 2.2.1 添加评论
+        // (1).插入评论
+        insert into Tb_Note_Comment(EntityType,EntityId,Content,UserId,Created,ParentId) values(?,?,?,?,?,?)
+        // (2).更新帖子评论数 Tb_Note 2.1.4
+
+        // 2.2.2 删除评论
+        // (1).设置评论Status=1
+        update Tb_Note_Comment set Status=1 where Id=?
+        // (2).更新帖子评论数 Tb_Note 2.1.4
+        // (3).更新帖子权重
+
+        // 2.2.3 根据帖子获取评论(可以带分页)
+        select Id,Content,UserId,Created,ParentId from Tb_Note_Comment where EntityType=? and EntityId=? [limit ?,?]
+
+3.关注
+    3.1 Tb_Follow - - - 关注
+            Id
+            BeFollowedUserId - - - 被关注人Id
+            FollowUserId - - - 关注人Id
+            Created
+            Deleted
+    sql:
+        // 3.1.1 添加关注
+        // (1).插入关注信息
+        insert into Tb_Follow(BeFollowedUserId,FollowUserId,Created) values(?,?,?)
+        // (2).更新用户关注数和被关注数 Tb_User_Other 1.3.2和1.3.3
+        // (3).更新用户权重 Tb_User_Other 1.3.10
+
+        // 3.1.2 查询关注的人
+        select info.* from Tb_User_Info info join Tb_Follow follow on follow.BeFollowedUserId=info.Id where follow.FollowUserId=? [limit ?,?]
+
+        // 3.1.3 查询关注我的人
+        select info.* from Tb_User_Info info join Tb_Follow follow on follow.FollowUserId=info.Id where follow.BeFollowedUserId=? [limit ?,?]
+
+        // 3.1.4 取消关注
+        // (1).更新数据库
+        delete from Tb_Follow where Id=? // 通过主键
+        delete from Tb_Follow where BeFollowedUserId=? and FollowUserId=? // 通过双方
+        // (2).更新用户关注数Tb_User_Other 1.3.2和1.3.3
+
+4.消息
+    4.1 Tb_Message
+            Id
+            EventType - - - 消息事件类型，如点赞，评论，关注
+            EntityType - - - 消息事件发生的实体类型
+            EntityId - - - 消息事件发生的实体Id
+            OriginId - - - 消息产生者
+            AcceptId - - - 消息接收者
+            Content - - - 消息附带内容，如评论内容
+            Status - - - 状态 0.未查看 1.已查看
+            Created
+
+5.收藏
+    5.1 Tb_Collection
+            Id
+            EntityType - - - 被收藏实体类型，Image或Video
+            EntityId - - - 被收藏实体Id
+            CollectUserId - - - 收藏的人
+            OriginId - - - 实体所属人
+            CategoryId - - - 收藏所属分类
+            Status - - - 状态 0.正常 1.删除
+            Created
+    sql:
+        // 5.1.1 添加收藏
+        // (1).先选择收藏分类，获取收藏分类Id
+        // (2).插入收藏表
+        insert into Tb_Collection(EntityType, EntityId, CollectUserId, OriginId, CategoryId, Status, Created) values(?,?,?,?,?,?,?)
+        // (3).更新收藏分类下收藏数 Tb_Collection_Category
+        // (4).更新用户收藏数和被收藏数 Tb_User_Other 1.3.8和1.3.9
+
+        // 5.1.2 删除收藏
+        // (1).设定Status为1
+        update Tb_Collection set Status=1 where Id=?
+        // (2).更新收藏分类下收藏数 Tb_Collection_Category
+        // (3).更新用户收藏数和被收藏数 Tb_Collection_Category 5.2.5
+
+        // 5.1.3 查找收藏分类下的收藏的实体
+        // 有点复杂
+
+        // 5.1.4 分类收藏为0的分类放在根目录下
+
+        // 5.1.4 更新收藏
+        update Tb_Collection set CategoryId=null where CategoryId=?
+
+    5.2 Tb_Collection_Category
+            Id
+            Title - - - 收藏名称
+            CollectCount - - - 收藏数，默认0
+            UserId
+            Status
+            Created
+    sql:
+        // 5.2.1 添加收藏分类
+        insert into Tb_Collection_Category(Title, UserId, Created) values(?,?,?)
+
+        // 5.2.2 删除收藏分类
+        // (1).将分类下的收藏的外键都设置null Tb_Collection 5.1.4
+        // (2).删除收藏分裂
+        update Tb_Collection_Category set Status=1 where Id=?
+
+        // 5.2.3 修改收藏分类
+        update Tb_Collection_Category set Title=? where Id=?
+
+        // 5.2.4 查询用户所有收藏分类
+        select Id,Title,CollectCount from Tb_Collection_Category where UserId=?
+
+        // 5.2.5 更新收藏分类下收藏数
+        update set CollectCount=CollectCount+? where Id=?
+
+6.图片/视频资源
+    6.1 Tb_Resource
+            Id
+            Url - - - 资源地址
+            Name - - - 资源名
+            Type - - - 资源类型，0.image, 1.video
+            Status - - - 状态
+            UserId
+            NoteId
+            Created
+    sql:
+        // 6.1.1 添加资源
+        // (1).插入资源
+        insert into Tb_Resource(Url,Name,Type,UserId,NoteId,Created) values(?,?,?,?,?,?)
+        // (2).更新用户拥有资源数 Tb_User_Other 1.3.7
+
+        // 6.1.2 删除资源
+        // (1).更新资源状态Status
+        update Tb_Resource set Status=1 where Id=?
+        // (2).更新用户拥有资源数 Tb_User_Other 1.3.7
+        // (3).一般不能单独删除资源，会涉及到帖子
+
+        // 6.1.3 删除帖子时，更新资源
+        update Tb_Resource set NoteId=0 where NoteId=?
+
+        // 6.1.4 分页获取用户图片资源
+        select * from Tb_Resource where type=0 and Status=0 and UserId=?
+
+        // 6.1.5 获取帖子中的资源
+        select * from Tb_Resource whre Status=0 and NoteId=?
+
+    6.2 Tb_Resource_Census
+            Id
+            Views - -  - 浏览数，默认0，权重1
+            LikeCount - - - 点赞数，默认0，权重50
+            CommentCount - - - 评论数，默认0，权重20
+            BeCollectCount - - - 被收藏数，默认0，权重60
+            OrderValue - - - 排序值，默认0
+            Created
+
+    // 6.2.1 添加资源统计
+    insert into Tb_Resource_Census(Id,Created) values(?,?)
+    // 6.2.2 更新资源统计
+    update Tb_Resource_Census set Views=?,LikeCount=?,CommentCount=?,BeCollectCount=? where Id=?
+    // 6.2.3 更新资源统计权重
+    update Tb_Resource_Census set OrderVlaue = Views*1 + LikeCount*50 + CommentCount*20 + BeCollectCount*60 where Id=?
+
+权限管理
+    Tb_Auth_Role
+    Tb_Auth_User
+    Tb_Auth_Resource
+日志
+    Tb_Log
+        Id
+        UserId
+        EventTypeCode
+        EventTypeName
+        EventName
+        EventCode
+        Description
+        Created
