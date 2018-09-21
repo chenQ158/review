@@ -1,4 +1,4 @@
-1 用户
+﻿1 用户
     1.1 Tb_User - - - 登录账户
             Id
             Email - - - 登录邮箱，唯一
@@ -30,6 +30,7 @@
     1.2. Tb_User_Info - - - 用户详情信息
             Id
             Nickname - - - 昵称，唯一
+            Signature - - - 签名
             Age - - - 年龄
             Gender - - - 性别
             Name - - - 姓名
@@ -38,7 +39,7 @@
 
     sql:
         // 1.2.1 添加 需要添加Id和Tb_User的Id一样
-        insert into Tb_User_Info(Id, NickName, Age, Gender, Name, Birthday, Updated) values(?,?,?,?,?,?,?)
+        insert into Tb_User_Info(Id, NickName, Signature, Age, Gender, Name, Birthday, Updated) values(?,?,?,?,?,?,?)
         // 1.2.2 修改,只修改昵称和性别,出生日期
         update Tb_User_Info set NickName=?,Gender=?,Birthday=?,Updated=? where Id=?
         // 1.2.3 查,用于登录后保存在session中
@@ -91,7 +92,7 @@
     2.1 Tb_Note
             Id
             ResourceCount - - - 资源数
-            Content - - - 附带文本内容
+            Description - - - 附带文本内容
             ReplayCount - - - 评论数，默认0
             UserId - - - 创建用户Id
             LikeCount - - - 点赞数，默认0
@@ -107,7 +108,7 @@
         // (1).先添加资源 Tb_Resource表
         // (2).获取添加的资源数
         // (3).添加帖子
-        insert into Tb_Note(ResourceCount, Content, UserId, Created, Updated) values(?,?,?,?,?)
+        insert into Tb_Note(ResourceCount, Description, UserId, Created, Updated) values(?,?,?,?,?)
         // (4).更新用户帖子数 Tb_User_Other 1.3.6
         // (5).更新用户资源数 Tb_User_Other 1.3.7
 
@@ -115,7 +116,7 @@
         // (1).设置帖子状态为1
         update Tb_Note set Status=1 where Id=?
         // (2).生产消息，更新统计数据
-        // (3).消费消息，更新用户统计信息Tb_User_Other 1.3.6
+        // (3).消费消息，更新用户统计信息 Tb_User_Other 1.3.6
 
         // 2.1.3获取帖子内容
         // (1).获取帖子信息
@@ -182,7 +183,7 @@
         // (2).更新用户关注数Tb_User_Other 1.3.2和1.3.3
 
 4.消息
-    4.1 Tb_Message
+    4.1 Tb_Event
             Id
             EventType - - - 消息事件类型，如点赞，评论，关注
             EntityType - - - 消息事件发生的实体类型
@@ -192,6 +193,9 @@
             Content - - - 消息附带内容，如评论内容
             Status - - - 状态 0.未查看 1.已查看
             Created
+
+    4.2 Tb_Message
+
 
 5.收藏
     5.1 Tb_Collection
@@ -311,3 +315,149 @@
         EventCode
         Description
         Created
+
+
+业务逻辑：
+0.登录：
+    [(1).判断是否表单重复提交]
+    (2).判断参数是否合法[username/email, password, identifyCode, confirmCode]
+    [(3).判断验证码是否正确]
+    (4).通过Username或者Email获取Tb_User
+    (5).判断查询结果是否为空
+    (6).判断用户是否激活，如果未激活，跳转到激活提示页面
+    (6).判断密码是否正确，用户是否正常
+    (7).密码正确，查询Tb_User_Info信息
+        如果Info信息不存在，跳转到完善个人信息上，将Tb_User存入redis，return
+        如果Info信息存在，则保存Info到Redis，设置Cookie
+    (8).跳转到首页/返回登录成功信息
+
+1.注册
+    [(1).判断是否表单重复提交]
+    (2).判断参数是否合法
+    [(3).判断验证码是否正确]
+    [(4).获取全局ID，设为主键Id]
+    (5).插入数据库Tb_User和Tb_User_Other
+    (6).发送激活邮件
+    (6).跳转到激活提示页面
+
+2.激活
+    (1).判断参数是否合法
+    (2).根据参数获取Tb_User
+    (3).如果为空，提示未注册
+    (4).如果不为空判断是否ActiveCode是否为空，为空则已注册，直接返回
+    (5).如果不为空则更新Tb_User的IsActive，并设置ActiveCode为null
+    (6).跳转到完善个人信息页面
+
+3.完善个人信息
+    [(1).判断是否表单重复提交]
+    (2).判断参数是否合法
+    [(3).判断验证码是否正确]
+    (4).从redis查出Tb_User，如果Tb_User不存在，则跳转到登录
+        如果存在，设置Info的Id为Tb_User的Id，然后插入Tb_User_Info信息
+    (5).将Info信息存入Redis，重置Cookie
+    (6).跳转到首页/个人页
+
+4.首页部分
+    (1).导航栏 - 首页|图片墙|视频墙|我的帖子|我的信息
+    (2).最热用户列表
+        * 根据用户OrderValue排序，获取前n个的统计及个人信息(Id，昵称，性别，签名，关注数，粉丝数)，可以分页
+    (3).最热帖子列表
+        * 根据帖子OrderValue排序，获取前n个的信息(Id，描述，收藏数，浏览数，点赞数，评论数)，可以分页
+    (4).分页显示今日精选（最新帖子），每行三个，略缩图
+        * 每项包含(构造)：帖子详情(获取分页Tb_Note)，一张图片(Tb_Resource即帖子中的一个资源，通过帖子Id获取)，距今时间(Tb_Note.Created需要计算)，发帖人(Tb_User_Info通过帖子中的UserId查出)
+        * 显示的每一项固定长宽，通过滚动条加载
+    (5).底部版权信息
+
+5.图片墙/视频墙
+    (1).菜单栏：可以选择按日期，热度，浏览量，或者普通的瀑布流显示
+    (2).如果使用瀑布流布局，宽度固定，高度适应，通过滚动条动态加载
+        * 每项包含：Tb_Resource_Census和Tb_Resource
+    (3).如果按日期，根据月显示，显示格式和首页的今日精选一样
+        * 每部分包含：日期标题显示，该日期下资源显示
+        * 有点复杂
+    (4).如果按热度，那么横向显示资源详情数据
+        * 每项包含：Tb_Resource和Tb_Resource_Census，以及Tb_User_Info
+
+    视频墙与图片墙相差不大
+
+6.帖子
+    (1).添加帖子：
+        * 帖子包含：帖子描述Description + 上传的图片或视频 + 图片/视频数
+        * 资源上传：上传的资源，资源描述Name（难点）
+        * 使用富文本编辑器的上传文件插件，插入资源到数据库，返回所有资源的Id集合
+        * 帖子提交，插入帖子到数据库，并更新资源所属帖子
+
+    (2).删除帖子：
+        * 根据Id修改帖子Status，然后更新资源所属帖子Id
+
+    (3).个人/他人帖子展示：
+        * 分页获取个人帖子，帖子中的资源以及帖子所属人（实体包含：Tb_Note,Tb_Resource[],Tb_User_Info）
+        * 显示详细帖子内容，像qq空间图片展示一样，通过滚动条加载
+
+    (4).帖子详情：
+        * 获取帖子详情信息
+        * 获取帖子拥有资源列表
+        * 获取帖子拥有评论Tb_Event(type = comment)分页，以及评论的用户Tb_User_Info
+
+7.个人信息
+    (1).修改密码
+        * 判断表单是否重复提交
+        * 判断参数是否合法
+        * 获取当前用户Tb_User
+        * 更新密码，更新数据库
+        * 成功
+    (2).修改个人信息
+        * [(1).判断是否表单重复提交]
+        * (2).判断参数是否合法
+        * [(3).判断验证码是否正确]
+        * (4).更新个人信息
+        * 成功
+    (3).查看关注的人
+        * 分页查询Tb_Follow以及Tb_User_Info
+        * 通过滚动条更新
+    (4).查看关注我的人
+        * 分页查询Tb_Follow以及Tb_User_Info
+        * 通过滚动条更新
+    (5).站内信即消息通知
+        *
+    (6).查看我的收藏
+        * 显示所有收藏分类，跟据UserId查询所有收藏分类信息
+        * 显示收藏分类下的收藏，根据收藏分类Id查询所有收藏信息
+    (7).展示我的详情信息：Tb_User_Info和Tb_User_Other
+        * 显示个人信息页面，像手机上最右的一样
+
+8.事件处理
+    (1).点赞
+        * 判断是否登录，如果没登录，提示登录
+        * 插入Tb_Event
+        * 发送一个事件到事件队列中
+        * 更新用户点赞数和被点赞数，帖子点赞数以及权重
+        * 成功
+    (2).收藏
+        * 判断是否登录，如果没登录，提示登录
+        * 选择收藏分类
+        * 插入Tb_Event
+        * 发送一个事件到事件队列
+        * 更新收藏数和被收藏数以及权重
+        * 成功
+    (3).关注
+        * 判断是否登录，如果没登录，提示登录
+        * 插入Tb_Event
+        * 发送一个事件到事件队列
+        * 更新关注数和被关注数以及权重
+        * 成功
+    (4).评论
+        * 判断是否登录，如果没登录，提示登录
+        * 插入Tb_Event
+        * 发送一个事件带事件队列
+        * 更新评论数以及权重
+        * 成功
+
+
+事件处理系统:
+    多线程处理消息队列
+    邮件消息队列
+    事件消息队列
+
+单点登录系统:
+    
