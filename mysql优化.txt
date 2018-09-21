@@ -1,0 +1,47 @@
+1. 当没有where时，使用count(*)更快
+
+2. 避免使用不兼容的数据类型
+
+3. 索引字段上进行运算会使索引失效
+
+4. 避免使用!=或<>、IS NULL或IS NOT NULL、IN、NOT IN、等操作，in语句能用exists语句代替就用exists
+因为这会使得系统无法使用索引、而只能直接搜索表中的数据。
+
+5. 尽量使用数字型字段
+
+6. 合理使用exist，not exists子句
+
+7. 能用Between就不要用in
+
+8. 能用distinct就不要用group by
+
+9. 尽量不要使用select into语句。select into会导致表锁定，阻止其他用户访问该表。
+
+10. 必要时强制查询优化器使用某个索引
+	如：select * from T (INDEX=IX_ProcessID) WHERE XXX=xx AND XX in (XX,XX,XX);
+
+11. 消除对大型表行数据的顺序存取
+
+12. 尽量避免在索引过的字符数据中，使用非打头字母搜索。这会使得引擎无法利用索引。
+
+13. update语句建议：a)尽量不要修改主键，b)当修改varchar型字段时，尽量使用相同长度内容的值替代
+c)尽量最小化对于含有UPDATE触发器的表的UPDATE操作，d)避免update建有很多索引的列，e)避免update将
+要复制到其他数据库的列，f)避免update在where子句条件中的列
+
+14. 能用union all就不要用union
+
+15.字符数据类型优化：a.避免使用NULL类型，b.经可能使用更小的字段，c.优先使用定长型
+
+16. 提高limit效率http://ariyue.iteye.com/blog/553541。在覆盖索引(覆盖索引用通俗的话讲就是在select
+的时候只用去读取索引而取得数据，无需进行二次select相关表)上进行偏移，而不是对全行数据进行偏移。
+
+17. 程序中一次性对同一个表插入多条数据效率更高
+
+18. 不要再选择的栏位上放置索引，这是无意义的。应该再条件选择的语句上合理的防止索引如where，order by
+
+19. order by语句的MySQL优化
+	a. order by + limit组合的索引优化，order by字段为索引
+	b. where + order by + limit 组合的索引优化 （联合索引）
+	c. where + in + order by + limit 组合的索引优化
+	d. where + order by 多个栏位 + limit，用组合索引，where中的字段索引在前
+	
